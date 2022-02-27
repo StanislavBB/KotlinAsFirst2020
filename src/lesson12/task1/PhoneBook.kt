@@ -24,7 +24,7 @@ import ru.spbstu.wheels.getEntry
  * Класс должен иметь конструктор по умолчанию (без параметров).
  */
 class PhoneBook {
-    private val book = mutableMapOf<String, MutableList<String>>()
+    private val book = mutableMapOf<String, MutableSet<String>>()
 
     /**
      * Добавить человека.
@@ -32,12 +32,11 @@ class PhoneBook {
      * и false, если человек с таким именем уже был в телефонной книге
      * (во втором случае телефонная книга не должна меняться).
      */
-    fun addHuman(name: String): Boolean {
-        return if (name !in book) {
-            book[name] = mutableListOf()
+    fun addHuman(name: String): Boolean =
+        if (name !in book) {
+            book[name] = mutableSetOf()
             true
         } else false
-    }
 
     /**
      * Убрать человека.
@@ -45,12 +44,11 @@ class PhoneBook {
      * и false, если человек с таким именем отсутствовал в телефонной книге
      * (во втором случае телефонная книга не должна меняться).
      */
-    fun removeHuman(name: String): Boolean {
-        return if (name in book) {
+    fun removeHuman(name: String): Boolean =
+        if (name in book) {
             book.remove(name)
             true
         } else false
-    }
 
 
     /**
@@ -60,15 +58,11 @@ class PhoneBook {
      * либо у него уже был такой номер телефона,
      * либо такой номер телефона зарегистрирован за другим человеком.
      */
-    fun addPhone(name: String, phone: String): Boolean {
-        if (name in book) {
-            if (!book.values.toString().contains(phone)) {
-                book[name]?.plusAssign(phone)
-                return true
-            }
-        }
-        return false
-    }
+    fun addPhone(name: String, phone: String): Boolean =
+        if (name in book && !book.values.any { it.contains(phone) }) {
+            book[name]!!.add(phone)
+            true
+        } else false
 
 
     /**
@@ -77,15 +71,12 @@ class PhoneBook {
      * и false, если человек с таким именем отсутствовал в телефонной книге
      * либо у него не было такого номера телефона.
      */
-    fun removePhone(name: String, phone: String): Boolean {
-        if (name in book) {
-            if (book[name].toString().contains(phone)) {
-                book[name]?.remove(phone)
-                return true
-            }
-        }
-        return false
-    }
+    fun removePhone(name: String, phone: String): Boolean =
+        if (name in book && book.values.any { it.contains(phone) }) {
+            book[name]!!.remove(phone)
+            true
+        } else false
+
 
     /**
      * Вернуть все номера телефона заданного человека.
@@ -98,43 +89,23 @@ class PhoneBook {
      * Если такого номера нет в книге, вернуть null.
      */
     fun humanByPhone(phone: String): String? {
-        if (book.toString().contains(phone)) {
-            for ((a, b) in book) {
-                if (book[a].toString().contains(phone)) {
-                    return a
-                }
-            }
+        for ((key, value) in book) {
+            if (value.contains(phone)) return key
         }
         return null
     }
 
-    /**
-     * Две телефонные книги равны, если в них хранится одинаковый набор людей,
-     * и каждому человеку соответствует одинаковый набор телефонов.
-     * Порядок людей / порядок телефонов в книге не должен иметь значения.
-     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is PhoneBook) return false
-        for (a in book) {
-            if (a.key in other.book.keys) {
-                for (b in other.book) {
-                    if (a.key == b.key) {
-                        if (!a.value.containsAll(b.value)) {
-                            return false
-                        }
-                    }
-                }
-            } else {
-                return false
-            }
-        }
+        if (javaClass != other?.javaClass) return false
+
+        other as PhoneBook
+
+        if (book != other.book) return false
+
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = book.keys.hashCode()
-        result = 31 * result + book.values.forEach { it.hashCode() }.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = book.hashCode()
+
 }
