@@ -2,17 +2,23 @@
 
 package lesson11.task1
 
+import java.lang.Exception
 import kotlin.math.pow
 
 /**
  * Фабричный метод для создания комплексного числа из строки вида x+yi
  */
 fun Complex(s: String): Complex {
-    val list = s.replace("i", "").replace("-", " -").replace("+", " +").split(" ")
-    return if (list.first().isEmpty()) {
-        Complex(list[1].toDouble(), list[2].toDouble())
+    if (Regex("""([-]\d+[+||-]\d+[i])|(\d+[+||-]\d+[i])""").containsMatchIn(s)) {
+        return if (s.first() == '-') {
+            val list = s.drop(1).replace("i", "").replace("-", " -").replace("+", " +").split(' ')
+            Complex(list[0].toDouble(), list[1].toDouble())
+        } else {
+            val list = s.replace("i", "").replace("-", " -").replace("+", " +").split(' ')
+            Complex(list[0].toDouble(), list[1].toDouble())
+        }
     } else {
-        Complex(list[0].toDouble(), list[1].toDouble())
+        throw Exception("Не комплексное число")
     }
 }
 
@@ -51,36 +57,30 @@ class Complex(val re: Double, val im: Double) {
      * Умножение
      */
     operator fun times(other: Complex): Complex {
-        val a = this.re * other.re - this.im * other.im
-        val b = this.re * other.im + other.re * this.im
-        return Complex(a, b)
+        val real = this.re * other.re - this.im * other.im
+        val imaginary = this.re * other.im + other.re * this.im
+        return Complex(real, imaginary)
     }
 
     /**
      * Деление
      */
     operator fun div(other: Complex): Complex {
-        val a = (other.re * this.re + other.im * this.im) / (other.re.pow(2.0) + other.im.pow(2.0))
-        val b = (other.re * this.im - this.re * other.im) / (other.re.pow(2.0) + other.im.pow(2.0))
-        return Complex(a, b)
+        val real = (other.re * this.re + other.im * this.im) / (other.re.pow(2.0) + other.im.pow(2.0))
+        val imaginary = (other.re * this.im - this.re * other.im) / (other.re.pow(2.0) + other.im.pow(2.0))
+        return Complex(real, imaginary)
     }
 
     /**
      * Сравнение на равенство
      */
-    override fun equals(other: Any?): Boolean {
-        return when {
-            this === other -> true
-            other is Complex -> re == other.re && im == other.im
-            else -> false
-        }
-    }
+    override fun equals(other: Any?): Boolean = this === other
 
     /**
-     * Преобразование в строку
+     * Преобразование в строку--
      */
     override fun toString(): String {
-        return if (im > 0) {
+        return if (im >= 0) {
             "$re+${im}i"
         } else {
             "$re${im}i"
