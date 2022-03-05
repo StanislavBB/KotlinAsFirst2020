@@ -9,14 +9,10 @@ import kotlin.math.pow
  * Фабричный метод для создания комплексного числа из строки вида x+yi
  */
 fun Complex(s: String): Complex {
-    if (Regex("""([-]\d+[+||-]\d+[i])|(\d+[+||-]\d+[i])""").containsMatchIn(s)) {
-        return if (s.first() == '-') {
-            val list = s.drop(1).replace("i", "").replace("-", " -").replace("+", " +").split(' ')
-            Complex(list[0].toDouble(), list[1].toDouble())
-        } else {
-            val list = s.replace("i", "").replace("-", " -").replace("+", " +").split(' ')
-            Complex(list[0].toDouble(), list[1].toDouble())
-        }
+    if (Regex("""[-]?\d+[+||-]\d+[i]""").matches(s)) {
+        var reIm = mutableListOf<String>()
+        Regex("""[+||-]?\d+""").findAll(s).forEach { reIm.add(it.value) }
+        return Complex(reIm.first().toDouble(), reIm.last().toDouble())
     } else {
         throw Exception("Не комплексное число")
     }
@@ -74,7 +70,17 @@ class Complex(val re: Double, val im: Double) {
     /**
      * Сравнение на равенство
      */
-    override fun equals(other: Any?): Boolean = this === other
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other is Complex) (return (re == other.re && im == other.re))
+        else return false
+    }
+
+    override fun hashCode(): Int {
+        var result = re
+        result = 31 * result + re
+        return result.toInt()
+    }
 
     /**
      * Преобразование в строку--
